@@ -29,11 +29,6 @@
 
 // #include <deal.II/numerics/derivative_approximation.h> // for adaptive mesh
 
-#include <deal.II/meshworker/dof_info.h>
-#include <deal.II/meshworker/integration_info.h>
-#include <deal.II/meshworker/simple.h>
-#include <deal.II/meshworker/loop.h>
-
 #include "common.h"
 #include "wind.h"
 
@@ -49,10 +44,20 @@
  * @f$ \phi @f$ is the variable and @f$\vec{v}@f$ is the advecting wind. The DG formulation of this
  * problem is
  * @f[
- * \int_{\Omega_h} l_j \left(\sum\phi_i l_i\right) \,d\Omega +
+ * \int_{\Omega_h} l_j \left(\sum \frac{\partial\phi_i}{\partial t} l_i\right) \,d\Omega +
  * \int_{\partial\Omega_h}l_j \left(\sum\phi^*_i l_i\right) \vec{v}\cdot\vec{n}\,dA -
  * \int_{\Omega_h}\nabla l_j\cdot\vec{v} \left(\sum\phi_i l_i\right) \,d\Omega = 0
  * @f]
+ * Explicit time integration gives
+ * @f[
+ * [M]\{\phi\}^{n+1} = [M]\{\phi\}^n + \left( [D]\{\phi\}^n - [F]\{f^*\}^n \right)\Delta t
+ * @f]
+ * @f$[M]@f$ is the mass matrix, @f$[D]@f$ is the differentiation matrix and @f$[F]@f$ is the flux
+ * matrix. Multiplying by mass inverse:
+ * @f[
+ * \{\phi\}^{n+1} = \{\phi\}^n + \left( [S]\{\phi\}^n - [L]\{f^*\}^n \right)
+ * @f]
+ * Here @f$[S]@f$ is the stiffness matrix and @f$[L]@f$ is the lifting matrix
  * 
  * 1. Uses numerical flux based approach, even for BCs (like in step-33)
  * 2. The global assembly is handled by MeshWorker
@@ -60,9 +65,6 @@
 
 class advection2D
 {
-        // aliases
-        using dofInfo = MeshWorker::DoFInfo<2>;
-        using cellInfo = MeshWorker::IntegrationInfo<2>;
 
         public:
         advection2D(const int order);
@@ -71,8 +73,6 @@ class advection2D
         void setup_system();
         void assemble_system();
 
-        static void integrate_cell_term(dofInfo &dinfo, cellInfo &cinfo);
-
         // class variables
         Triangulation<2> triang;
         const MappingQ1<2> mapping;
@@ -80,10 +80,11 @@ class advection2D
         FE_DGQ<2> fe;
         DoFHandler<2> dof_handler;
 
-        SparsityPattern sparsity_pattern;
-        SparseMatrix<double> system_matrix;
-        Vector<double> solution;
-        Vector<double> rhs;
+        // solution has to be global to enable results output, a local solution cannot used to
+        // output results
+        Vector<double> g_solution; // global solution
+        Vector<double> gold_solution; // global old solution
+        Vector<double> l_rhs; // local rhs (to be updated for every cell)
 };
 
 #endif
