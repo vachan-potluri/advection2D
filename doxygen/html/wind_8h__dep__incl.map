@@ -1,9 +1,0 @@
-<map id="wind.h" name="wind.h">
-<area shape="rect" id="node1" title="Contains function decl for the advection velocity." alt="" coords="267,5,327,32"/>
-<area shape="rect" id="node2" href="$advection2D_8h.html" title="Defines advection2D class." alt="" coords="115,80,222,107"/>
-<area shape="rect" id="node5" href="$num__fluxes_8h.html" title="Contains function decls for normal numerical fluxes." alt="" coords="247,80,347,107"/>
-<area shape="rect" id="node7" href="$wind_8cc.html" title="Contains function defn for the advection velocity." alt="" coords="371,80,438,107"/>
-<area shape="rect" id="node3" href="$advection2D_8cc.html" title="Defines advection2D class." alt="" coords="5,155,119,181"/>
-<area shape="rect" id="node4" href="$main_8cc.html" title="The main file of the project." alt="" coords="143,155,211,181"/>
-<area shape="rect" id="node6" href="$num__fluxes_8cc.html" title="Contains function defns for normal numerical fluxes." alt="" coords="243,155,350,181"/>
-</map>
