@@ -52,13 +52,19 @@ void advection2D::setup_system()
  */
 void advection2D::assemble_system()
 {
-        // calculate all local matrices
-        FullMatrix<double> l_mass(fe.dofs_per_cell), l_diff(fe.dofs_per_cell),
+        // allocate all local matrices
+        FullMatrix<double> l_mass(fe.dofs_per_cell),
+                l_mass_inv(fe.dofs_per_cell),
+                l_diff(fe.dofs_per_cell),
                 l_flux(fe.dofs_per_cell); // initialise with square matrix size
-        QGauss<2> quad_formula(fe.degree+1); // (N+1) gauss quad
-        FEValues<2> fe_values(fe, quad_formula,
+        QGauss<2> cell_quad_formula(fe.degree+1); // (N+1) gauss quad for cell
+        QGauss<1> face_quad_formula(fe.degree+1); // for face
+        FEValues<2> fe_values(fe, cell_quad_formula,
                 update_values | update_gradients | update_JxW_values);
+        FEFaceValues<2> fe_face_values(fe, face_quad_formula,
+                update_values | update_JxW_values);
         
+        // compute mass and diff matrices
         for(auto &cell: dof_handler.active_cell_iterators()){
                 fe_values.reinit(cell);
                 l_mass = 0;
