@@ -58,9 +58,6 @@
  * \{\phi\}^{n+1} = \{\phi\}^n + \left( [S]\{\phi\}^n - [L]\{f^*\}^n \right)
  * @f]
  * Here @f$[S]@f$ is the stiffness matrix and @f$[L]@f$ is the lifting matrix
- * 
- * 1. Uses numerical flux based approach, even for BCs (like in step-33)
- * 2. The global assembly is handled by MeshWorker
  */
 
 class advection2D
@@ -85,6 +82,10 @@ class advection2D
         Vector<double> g_solution; // global solution
         Vector<double> gold_solution; // global old solution
         Vector<double> l_rhs; // local rhs (to be updated for every cell)
+
+        // stiffness and lifting matrices
+        std::vector<FullMatrix<double>> stiff_mats;
+        std::vector<FullMatrix<double>> lift_mats;
 };
 
 #endif
