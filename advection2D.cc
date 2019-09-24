@@ -49,6 +49,7 @@ void advection2D::setup_system()
 
         // set user flags for cell
         // for a face, cell with lower user index will be treated owner
+        // is this reqd? can't we just use cell->index()?
         uint i=0;
         for(auto &cell: dof_handler.active_cell_iterators()){
                 cell->set_user_index(i++);
@@ -108,6 +109,7 @@ void advection2D::assemble_system()
                 // each face will have a separate flux matrix
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
                         fe_face_values.reinit(cell, face_id);
+                        l_flux = 0;
                         for(qid=0; qid<fe_face_values.n_quadrature_points; qid++){
                                 for(i_face=0; i_face<fe.dofs_per_face; i_face++){
                                         for(j_face=0; j_face<fe.dofs_per_face; j_face++){
@@ -123,15 +125,16 @@ void advection2D::assemble_system()
                                         } // inner loop over face shape fns
                                 } // outer loop over face shape fns
                         } // loop over face quad points
+                        temp.mmult(l_mass_inv, l_flux);
+                        lift_mats[cell->index()][face_id] = temp;
                 }// loop over faces
-                temp.mmult(l_mass_inv, l_flux);
-                lift_mats.emplace_back(temp);
+
         }// loop over cells
         deallog << "Completed assembly" << std::endl << "Mass matrix:" << std::endl;
         l_mass.print(deallog, 10, 2);
         deallog << "Differentiation matrix" << std::endl;
         l_diff.print(deallog, 10, 2);
-        deallog << "Flux matrix" << std::endl;
+        deallog << "Flux matrix (for face 3)" << std::endl;
         l_flux.print(deallog, 10, 2);
 }
 
