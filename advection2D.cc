@@ -18,7 +18,7 @@
  * increment of 3
  */
 advection2D::advection2D(const uint order)
-: mapping(), fe(order), dof_handler(triang),
+: mapping(), fe(order), fe_face(order), dof_handler(triang),
         face_first_dof{0, order, 0, (order+1)*order},
         face_dof_increment{order+1, order+1, 1, 1}
 {}
@@ -50,10 +50,10 @@ void advection2D::setup_system()
         // set user flags for cell
         // for a face, cell with lower user index will be treated owner
         // is this reqd? can't we just use cell->index()?
-        uint i=0;
-        for(auto &cell: dof_handler.active_cell_iterators()){
-                cell->set_user_index(i++);
-        } // loop over cells
+        // uint i=0;
+        // for(auto &cell: dof_handler.active_cell_iterators()){
+        //         cell->set_user_index(i++);
+        // } // loop over cells
 
         // set sizes of stiffness and lifting matrix containers
         stiff_mats.reserve(triang.n_active_cells());
@@ -111,8 +111,8 @@ void advection2D::assemble_system()
                         fe_face_values.reinit(cell, face_id);
                         l_flux = 0;
                         for(qid=0; qid<fe_face_values.n_quadrature_points; qid++){
-                                for(i_face=0; i_face<fe.dofs_per_face; i_face++){
-                                        for(j_face=0; j_face<fe.dofs_per_face; j_face++){
+                                for(i_face=0; i_face<fe_face.dofs_per_face; i_face++){
+                                        for(j_face=0; j_face<fe_face.dofs_per_face; j_face++){
                                                 // mapping
                                                 i = face_first_dof[face_id] +
                                                         i_face*face_dof_increment[face_id];

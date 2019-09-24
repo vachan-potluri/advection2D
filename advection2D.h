@@ -23,6 +23,7 @@
 #include <deal.II/fe/mapping_q1.h>
 
 #include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_face.h>
 
 #include <deal.II/lac/solver_richardson.h>
 #include <deal.II/lac/precondition_block.h>
@@ -79,6 +80,7 @@ class advection2D
         const MappingQ1<2> mapping;
 
         FE_DGQ<2> fe;
+        FE_FaceQ<2> fe_face; // face finite element
         DoFHandler<2> dof_handler;
 
         // solution has to be global to enable results output, a local solution cannot used to
