@@ -11,17 +11,17 @@
  * Based on order, face_first_dof and face_dof_increment containers are set here. See
  * https://www.dealii.org/current/doxygen/deal.II/structGeometryInfo.html and
  * https://www.dealii.org/current/doxygen/deal.II/classFE__DGQ.html for face and dof ordering
- * respectively in a cell. See DG notes dated 24-09-19.
+ * respectively in a cell. According to GeometryInfo, the direction of face lines is along the
+ * positive axes. See DG notes dated 24-09-19.
  * 
  * Eg: for order=2, on 1-th face, the first cell dof is 2 and the next dof is obtained after
  * increment of 3
  */
-advection2D::advection2D(const int order)
-: mapping(), fe(order), dof_handler(triang) // @suppress("Symbol is not resolved")
-{
-        face_first_dof = {0, order, 0, (order+1)*order};
-        face_dof_increment = {order+1, order+1, 1, 1};
-}
+advection2D::advection2D(const uint order)
+: mapping(), fe(order), dof_handler(triang),
+        face_first_dof{0, order, 0, (order+1)*order},
+        face_dof_increment{order+1, order+1, 1, 1}
+{}
 
 /**
  * @brief Sets up the system
@@ -67,7 +67,7 @@ void advection2D::setup_system()
  */
 void advection2D::assemble_system()
 {
-        deallog << "Assembling system" << std::endl;
+        deallog << "Assembling system ... " << std::flush;
         // allocate all local matrices
         FullMatrix<double> l_mass(fe.dofs_per_cell),
                 l_mass_inv(fe.dofs_per_cell),
@@ -120,11 +120,12 @@ void advection2D::assemble_system()
                                                         fe_face_values.JxW(qid);
                                         } // inner loop over face shape fns
                                 } // outer loop over face shape fns
-                        } // loop over quad points
+                        } // loop over face quad points
                 }// loop over faces
                 temp.mmult(l_mass_inv, l_flux);
                 lift_mats.emplace_back(temp);
         }// loop over cells
+        deallog << "Completed assembly" << std::endl;
 }
 
 
@@ -135,6 +136,9 @@ void advection2D::assemble_system()
 #ifdef DEBUG
 void advection2D::test()
 {
+        deallog << "---------------------------------------------" << std::endl;
+        deallog << "Testing advection2D class" << std::endl;
+        deallog << "---------------------------------------------" << std::endl;
         advection2D problem(2);
         problem.setup_system();
         problem.assemble_system();
