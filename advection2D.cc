@@ -37,7 +37,7 @@ void advection2D::setup_system()
         deallog << "Setting up the system" << std::endl;
         // initialise the triang variable
         GridGenerator::hyper_cube(triang);
-        triang.refine_global(5); // 2^5=32 cells in each direction
+        triang.refine_global(5); // 2^5=32 cells in each direction, total length 1m
 
         // set dof_handler
         dof_handler.distribute_dofs(fe);
@@ -104,6 +104,8 @@ void advection2D::assemble_system()
                 temp.mmult(l_mass_inv, l_diff); // store mass_inv * diff into temp
                 stiff_mats.emplace_back(temp);
 
+                // flux matrix computation is wrong (see Notes14 of DG course)
+                // each face will have a separate flux matrix
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
                         fe_face_values.reinit(cell, face_id);
                         for(qid=0; qid<fe_face_values.n_quadrature_points; qid++){
@@ -125,7 +127,12 @@ void advection2D::assemble_system()
                 temp.mmult(l_mass_inv, l_flux);
                 lift_mats.emplace_back(temp);
         }// loop over cells
-        deallog << "Completed assembly" << std::endl;
+        deallog << "Completed assembly" << std::endl << "Mass matrix:" << std::endl;
+        l_mass.print(deallog, 10, 2);
+        deallog << "Differentiation matrix" << std::endl;
+        l_diff.print(deallog, 10, 2);
+        deallog << "Flux matrix" << std::endl;
+        l_flux.print(deallog, 10, 2);
 }
 
 
@@ -139,7 +146,7 @@ void advection2D::test()
         deallog << "---------------------------------------------" << std::endl;
         deallog << "Testing advection2D class" << std::endl;
         deallog << "---------------------------------------------" << std::endl;
-        advection2D problem(2);
+        advection2D problem(1);
         problem.setup_system();
         problem.assemble_system();
 }
