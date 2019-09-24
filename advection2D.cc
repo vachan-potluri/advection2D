@@ -67,14 +67,15 @@ void advection2D::assemble_system()
         FEFaceValues<2> fe_face_values(fe, face_quad_formula,
                 update_values | update_JxW_values | update_quadrature_points);
         
+        uint i, j, i_face, j_face, qid, face_id;
         // compute mass and diff matrices
         for(auto &cell: dof_handler.active_cell_iterators()){
                 fe_values.reinit(cell);
                 l_mass = 0;
                 l_diff = 0;
-                for(uint qid=0; qid<fe_values.n_quadrature_points; qid++){
-                        for(uint i=0; i<fe_values.dofs_per_cell; i++){
-                                for(uint j=0; j<fe_values.dofs_per_cell; j++){
+                for(qid=0; qid<fe_values.n_quadrature_points; qid++){
+                        for(i=0; i<fe.dofs_per_cell; i++){
+                                for(j=0; j<fe.dofs_per_cell; j++){
                                         l_mass(i,j) += fe_values.shape_value(i, qid) *
                                                 fe_values.shape_value(j, qid) *
                                                 fe_values.JxW(qid);
@@ -88,6 +89,23 @@ void advection2D::assemble_system()
                 l_mass_inv.invert(l_mass);
                 temp.mmult(l_mass_inv, l_diff); // store mass_inv * diff into temp
                 stiff_mats.emplace_back(temp);
+
+                for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
+                        fe_face_values.reinit(cell, face_id);
+                        for(qid=0; qid<fe_face_values.n_quadrature_points; qid++){
+                                for(i_face=0; i_face<fe.dofs_per_face; i_face++){
+                                        for(j_face=0; j_face<fe.dofs_per_face; j_face++){
+                                                // map i_face to i using face_id (similarly for j)
+                                                l_flux(i,j) +=
+                                                        fe_face_values.shape_value(i_face, qid) *
+                                                        fe_face_values.shape_value(j_face, qid) *
+                                                        fe_face_values.JxW(qid);
+                                        } // inner loop over face shape fns
+                                } // outer loop over face shape fns
+                        } // loop over quad points
+                }// loop over faces
+                temp.mmult(l_mass_inv, l_flux);
+                lift_mats.emplace_back(temp);
         }// loop over cells
 }
 
