@@ -10,6 +10,11 @@
 
 int main()
 {
+        deallog.depth_console(2);
+
         printf("Hello World!\n");
+        #ifdef DEBUG
+        advection2D::test();
+        #endif
         return 0;
 }
