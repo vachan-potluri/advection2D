@@ -65,6 +65,10 @@ class advection2D
 
         public:
         advection2D(const int order);
+        // first cell dof on a face
+        static std::array<uint, GeometryInfo<2>::faces_per_cell> face_first_dof;
+        // increment of cell dof on a face
+        static std::array<uint, GeometryInfo<2>::faces_per_cell> face_dof_increment;
 
         private:
         void setup_system();

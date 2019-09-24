@@ -7,10 +7,21 @@
 
 /**
  * @brief Constructor with order of polynomial approx as arg
+ * 
+ * Based on order, face_first_dof and face_dof_increment containers are set here. See
+ * https://www.dealii.org/current/doxygen/deal.II/structGeometryInfo.html and
+ * https://www.dealii.org/current/doxygen/deal.II/classFE__DGQ.html for face and dof ordering
+ * respectively in a cell. See DG notes dated 24-09-19.
+ * 
+ * Eg: for order=2, on 1-th face, the first cell dof is 2 and the next dof is obtained after
+ * increment of 3
  */
 advection2D::advection2D(const int order)
 : mapping(), fe(order), dof_handler(triang) // @suppress("Symbol is not resolved")
-{}
+{
+        face_first_dof = {0, order, 0, (order+1)*order};
+        face_dof_increment = {order+1, order+1, 1, 1};
+}
 
 /**
  * @brief Sets up the system
@@ -50,6 +61,9 @@ void advection2D::setup_system()
 
 /**
  * @brief Assembles the system
+ * 
+ * Calculating mass and differentiation matrices is as usual. For flux matrix, the containers
+ * face_first_dof and face_dof_increment are used to map face-local dof index to cell dof index.
  */
 void advection2D::assemble_system()
 {
@@ -95,7 +109,11 @@ void advection2D::assemble_system()
                         for(qid=0; qid<fe_face_values.n_quadrature_points; qid++){
                                 for(i_face=0; i_face<fe.dofs_per_face; i_face++){
                                         for(j_face=0; j_face<fe.dofs_per_face; j_face++){
-                                                // map i_face to i using face_id (similarly for j)
+                                                // mapping
+                                                i = face_first_dof[face_id] +
+                                                        i_face*face_dof_increment[face_id];
+                                                j = face_first_dof[face_id] +
+                                                        j_face*face_dof_increment[face_id];
                                                 l_flux(i,j) +=
                                                         fe_face_values.shape_value(i_face, qid) *
                                                         fe_face_values.shape_value(j_face, qid) *
