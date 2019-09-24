@@ -23,6 +23,7 @@ advection2D::advection2D(const int order)
  */
 void advection2D::setup_system()
 {
+        deallog << "Setting up the system" << std::endl;
         // initialise the triang variable
         GridGenerator::hyper_cube(triang);
         triang.refine_global(5); // 2^5=32 cells in each direction
@@ -52,17 +53,19 @@ void advection2D::setup_system()
  */
 void advection2D::assemble_system()
 {
+        deallog << "Assembling system" << std::endl;
         // allocate all local matrices
         FullMatrix<double> l_mass(fe.dofs_per_cell),
                 l_mass_inv(fe.dofs_per_cell),
                 l_diff(fe.dofs_per_cell),
-                l_flux(fe.dofs_per_cell); // initialise with square matrix size
+                l_flux(fe.dofs_per_cell),
+                temp(fe.dofs_per_cell); // initialise with square matrix size
         QGauss<2> cell_quad_formula(fe.degree+1); // (N+1) gauss quad for cell
         QGauss<1> face_quad_formula(fe.degree+1); // for face
         FEValues<2> fe_values(fe, cell_quad_formula,
-                update_values | update_gradients | update_JxW_values);
+                update_values | update_gradients | update_JxW_values | update_quadrature_points);
         FEFaceValues<2> fe_face_values(fe, face_quad_formula,
-                update_values | update_JxW_values);
+                update_values | update_JxW_values | update_quadrature_points);
         
         // compute mass and diff matrices
         for(auto &cell: dof_handler.active_cell_iterators()){
@@ -79,8 +82,25 @@ void advection2D::assemble_system()
                                                 wind(fe_values.quadrature_point(qid)) *
                                                 fe_values.shape_value(j, qid) *
                                                 fe_values.JxW(qid);
-                                }
-                        }
-                } // loop over quad points
+                                } // inner loop cell shape fns
+                        } // outer loop cell shape fns
+                } // loop over cell quad points
+                l_mass_inv.invert(l_mass);
+                temp.mmult(l_mass_inv, l_diff); // store mass_inv * diff into temp
+                stiff_mats.emplace_back(temp);
         }// loop over cells
 }
+
+
+
+// # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+// Test function
+// # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#ifdef DEBUG
+void advection2D::test()
+{
+        advection2D problem(2);
+        problem.setup_system();
+        problem.assemble_system();
+}
+#endif

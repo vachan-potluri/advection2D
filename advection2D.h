@@ -86,6 +86,13 @@ class advection2D
         // stiffness and lifting matrices
         std::vector<FullMatrix<double>> stiff_mats;
         std::vector<FullMatrix<double>> lift_mats;
+
+
+
+        public:
+        #ifdef DEBUG
+        static void test();
+        #endif
 };
 
 #endif
