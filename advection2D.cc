@@ -119,8 +119,8 @@ void advection2D::assemble_system()
                                                 j = face_first_dof[face_id] +
                                                         j_face*face_dof_increment[face_id];
                                                 l_flux(i,j) +=
-                                                        fe_face_values.shape_value(i_face, qid) *
-                                                        fe_face_values.shape_value(j_face, qid) *
+                                                        fe_face_values.shape_value(i, qid) *
+                                                        fe_face_values.shape_value(j, qid) *
                                                         fe_face_values.JxW(qid);
                                         } // inner loop over face shape fns
                                 } // outer loop over face shape fns
