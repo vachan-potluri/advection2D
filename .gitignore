@@ -7,3 +7,6 @@ cmake_install.cmake
 
 # executable
 advection2D
+
+# result files
+*.vtk
