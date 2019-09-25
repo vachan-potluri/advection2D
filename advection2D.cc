@@ -144,9 +144,31 @@ void advection2D::set_IC()
 }
 
 /**
+ * @brief Boundary ids are set here
+ * 
+ * @f$x=0@f$ forms boundary 0 with @f$\phi@f$ value prescribed as @f$1@f$
+ * @f$y=0@f$ forms boundary 0 with @f$\phi@f$ value prescribed as @f$0@f$
+ * @f$x=1\bigcup y=1@f$ forms boundary 2 with zero gradient
+ * @note Ghost cell approach will be used
+ */
+void advection2D::set_boundary_ids()
+{
+        for(auto &cell: dof_handler.active_cell_iterators()){
+                for(uint face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
+                        if(cell->face(face_id)->at_boundary()){
+                                Point<2> fcenter = cell->face(face_id)->center(); // face center
+                                if(fabs(fcenter(0)) < 1e-6) cell->face(face_id)->set_boundary_id(0);
+                                if(fabs(fcenter(1)) < 1e-6) cell->face(face_id)->set_boundary_id(1);
+                                else cell->face(face_id)->set_boundary_id(2);
+                        }
+                } // loop over faces
+        } // loop over cells
+}
+
+/**
  * @brief Prints stifness and the 4 lifting matrices of 0-th element
  */
-void advection2D::print_matrices()
+void advection2D::print_matrices() const
 {
         deallog << "Stiffness matrix" << std::endl;
         stiff_mats[0].print(deallog, 10, 2);
@@ -159,7 +181,7 @@ void advection2D::print_matrices()
 /**
  * @brief Outputs the global solution in vtk format taking the filename as argument
  */
-void advection2D::output(const std::string &filename)
+void advection2D::output(const std::string &filename) const
 {
         DataOut<2> data_out;
         data_out.attach_dof_handler(dof_handler);
@@ -187,6 +209,7 @@ void advection2D::test()
         problem.assemble_system();
         problem.print_matrices();
         problem.set_IC();
+        problem.set_boundary_ids();
         problem.output(std::string("initial_condition.vtk"));
 }
 #endif

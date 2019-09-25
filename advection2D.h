@@ -81,8 +81,9 @@ class advection2D
         void setup_system();
         void assemble_system();
         void set_IC();
-        void print_matrices();
-        void output(const std::string &filename);
+        void set_boundary_ids();
+        void print_matrices() const;
+        void output(const std::string &filename) const;
 
         // class variables
         Triangulation<2> triang;
