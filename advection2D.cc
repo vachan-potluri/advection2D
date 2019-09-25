@@ -63,8 +63,9 @@ void advection2D::setup_system()
 /**
  * @brief Assembles the system
  * 
- * Calculating mass and differentiation matrices is as usual. For flux matrix, the containers
- * face_first_dof and face_dof_increment are used to map face-local dof index to cell dof index.
+ * Calculating mass and differentiation matrices is as usual. Each face will have its own flux
+ * matrix. The containers face_first_dof and face_dof_increment are used to map face-local dof index
+ * to cell dof index.
  */
 void advection2D::assemble_system()
 {
@@ -102,10 +103,9 @@ void advection2D::assemble_system()
                         } // outer loop cell shape fns
                 } // loop over cell quad points
                 l_mass_inv.invert(l_mass);
-                temp.mmult(l_mass_inv, l_diff); // store mass_inv * diff into temp
+                l_mass_inv.mmult(temp, l_diff); // store mass_inv * diff into temp
                 stiff_mats.emplace_back(temp);
 
-                // flux matrix computation is wrong (see Notes14 of DG course)
                 // each face will have a separate flux matrix
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
                         fe_face_values.reinit(cell, face_id);
@@ -125,17 +125,24 @@ void advection2D::assemble_system()
                                         } // inner loop over face shape fns
                                 } // outer loop over face shape fns
                         } // loop over face quad points
-                        temp.mmult(l_mass_inv, l_flux);
+                        l_mass_inv.mmult(temp, l_flux);
                         lift_mats[cell->index()][face_id] = temp;
                 }// loop over faces
-
         }// loop over cells
-        deallog << "Completed assembly" << std::endl << "Mass matrix:" << std::endl;
-        l_mass.print(deallog, 10, 2);
-        deallog << "Differentiation matrix" << std::endl;
-        l_diff.print(deallog, 10, 2);
-        deallog << "Flux matrix (for face 3)" << std::endl;
-        l_flux.print(deallog, 10, 2);
+        deallog << "Completed assembly" << std::endl;
+}
+
+/**
+ * @brief Prints stifness and the 4 lifting matrices of 0-th element
+ */
+void advection2D::print_matrices()
+{
+        deallog << "Stiffness matrix" << std::endl;
+        stiff_mats[0].print(deallog, 10, 2);
+        for(uint i=0; i<GeometryInfo<2>::faces_per_cell; i++){
+                deallog << "Lifting matrix, face " << i << std::endl;
+                lift_mats[0][i].print(deallog, 15, 4);
+        }
 }
 
 
@@ -152,5 +159,6 @@ void advection2D::test()
         advection2D problem(1);
         problem.setup_system();
         problem.assemble_system();
+        problem.print_matrices();
 }
 #endif
