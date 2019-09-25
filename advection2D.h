@@ -74,6 +74,7 @@ class advection2D
         private:
         void setup_system();
         void assemble_system();
+        void set_IC();
         void print_matrices();
 
         // class variables
