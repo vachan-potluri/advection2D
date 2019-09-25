@@ -8,6 +8,8 @@
 /**
  * @brief Constructor with order of polynomial approx as arg
  * 
+ * advection2D::mapping, advection2D::fe and advection2D::fe_face are initialised.
+ * advection2D::dof_handler is associated to advection2D::triang.
  * Based on order, face_first_dof and face_dof_increment containers are set here. See
  * https://www.dealii.org/current/doxygen/deal.II/structGeometryInfo.html and
  * https://www.dealii.org/current/doxygen/deal.II/classFE__DGQ.html for face and dof ordering
@@ -26,11 +28,10 @@ advection2D::advection2D(const uint order)
 /**
  * @brief Sets up the system
  * 
- * 1. Mesh is setup and stored in triang
- * 2. dof_handler is linked to fe
- * 3. Global solution and local rhs sizes are set
- * 4. Cell user indices are set (for owner/neighbor distinction)
- * 5. Sizes of stiffness and lifting matrix containers are set
+ * 1. Mesh is setup and stored in advection2D::triang
+ * 2. advection2D::dof_handler is linked to advection2D::fe
+ * 3. advection2D::g_solution and advection2D::l_rhs sizes are set
+ * 4. Sizes of advection2D::stiff_mats and advection2D::lift_mats containers are set
  */
 void advection2D::setup_system()
 {
@@ -64,8 +65,8 @@ void advection2D::setup_system()
  * @brief Assembles the system
  * 
  * Calculating mass and differentiation matrices is as usual. Each face will have its own flux
- * matrix. The containers face_first_dof and face_dof_increment are used to map face-local dof index
- * to cell dof index.
+ * matrix. The containers advection2D::face_first_dof and advection2D::face_dof_increment are used
+ * to map face-local dof index to cell dof index.
  */
 void advection2D::assemble_system()
 {
@@ -136,7 +137,7 @@ void advection2D::assemble_system()
  * @brief Sets initial condition
  * 
  * Since nodal basis is being used, initial condition is easy to set. interpolate function of
- * VectorTools namespace is used.
+ * VectorTools namespace is used with IC class and advection2D::g_solution. See IC::value()
  */
 void advection2D::set_IC()
 {
@@ -146,9 +147,9 @@ void advection2D::set_IC()
 /**
  * @brief Boundary ids are set here
  * 
- * @f$x=0@f$ forms boundary 0 with @f$\phi@f$ value prescribed as @f$1@f$
- * @f$y=0@f$ forms boundary 0 with @f$\phi@f$ value prescribed as @f$0@f$
- * @f$x=1\bigcup y=1@f$ forms boundary 2 with zero gradient
+ * @f$x=0@f$ forms boundary 0 with @f$\phi@f$ value prescribed as @f$1@f$<br/>
+ * @f$y=0@f$ forms boundary 1 with @f$\phi@f$ value prescribed as @f$0@f$<br/>
+ * @f$x=1 \bigcup y=1@f$ forms boundary 2 with zero gradient
  * @note Ghost cell approach will be used
  */
 void advection2D::set_boundary_ids()

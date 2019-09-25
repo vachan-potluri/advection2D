@@ -44,7 +44,7 @@
 
 /**
  * @class advection2D
- * @brief This is mostly a blend of step-12 and dflo code
+ * @brief A class for 2D linear advection equation
  * 
  * The problem to be solved is
  * @f[ \frac{\partial \phi}{\partial t} + \nabla \cdot (\phi \vec{v}) = 0 @f]
@@ -52,19 +52,25 @@
  * problem is
  * @f[
  * \int_{\Omega_h} l_j \left(\sum \frac{\partial\phi_i}{\partial t} l_i\right) \,d\Omega +
- * \int_{\partial\Omega_h}l_j \left(\sum\phi^*_i l_i\right) \vec{v}\cdot\vec{n}\,dA -
+ * \sum_{\text{faces}} \int_{\text{face}} l_j \left(\sum\phi^*_i l_i\right)
+ * \vec{v}\cdot\vec{n}\,dA -
  * \int_{\Omega_h}\nabla l_j\cdot\vec{v} \left(\sum\phi_i l_i\right) \,d\Omega = 0
  * @f]
  * Explicit time integration gives
  * @f[
- * [M]\{\phi\}^{n+1} = [M]\{\phi\}^n + \left( [D]\{\phi\}^n - [F]\{f^*\}^n \right)\Delta t
+ * [M]\{\phi\}^{n+1} = [M]\{\phi\}^n + \left( [D]\{\phi\}^n - \sum_{\text{faces}}[F]\{f^*\}^n \right)
+ * \Delta t
  * @f]
  * @f$[M]@f$ is the mass matrix, @f$[D]@f$ is the differentiation matrix and @f$[F]@f$ is the flux
  * matrix. Multiplying by mass inverse:
  * @f[
- * \{\phi\}^{n+1} = \{\phi\}^n + \left( [S]\{\phi\}^n - [L]\{f^*\}^n \right)
+ * \{\phi\}^{n+1} = \{\phi\}^n + \left( [S]\{\phi\}^n - \sum_{\text{faces}}[L]\{f^*\}^n \right)
  * @f]
  * Here @f$[S]@f$ is the stiffness matrix and @f$[L]@f$ is the lifting matrix
+ * @note Every face will have its own lifting matrix. The contribution of cell vertices from two
+ * different faces cannot be clubbed into a single lifting matrix because two numerical fluxes act
+ * at every cell vertex. Accordingly, 4 different numerical flux vectors will multiply these 4
+ * lifting matrices. See ME757 material "Notes14.pdf"
  */
 
 class advection2D
