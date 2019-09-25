@@ -156,6 +156,21 @@ void advection2D::print_matrices()
         }
 }
 
+/**
+ * @brief Outputs the global solution in vtk format taking the filename as argument
+ */
+void advection2D::output(const std::string &filename)
+{
+        DataOut<2> data_out;
+        data_out.attach_dof_handler(dof_handler);
+        data_out.add_data_vector(g_solution, "phi");
+
+        data_out.build_patches();
+
+        std::ofstream ofile(filename);
+        data_out.write_vtk(ofile);
+}
+
 
 
 // # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -171,5 +186,7 @@ void advection2D::test()
         problem.setup_system();
         problem.assemble_system();
         problem.print_matrices();
+        problem.set_IC();
+        problem.output(std::string("initial_condition.vtk"));
 }
 #endif

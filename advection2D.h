@@ -29,6 +29,9 @@
 #include <deal.II/lac/precondition_block.h>
 
 #include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/data_out.h>
+
+#include <fstream>
 
 // #include <deal.II/numerics/derivative_approximation.h> // for adaptive mesh
 
@@ -79,6 +82,7 @@ class advection2D
         void assemble_system();
         void set_IC();
         void print_matrices();
+        void output(const std::string &filename);
 
         // class variables
         Triangulation<2> triang;
