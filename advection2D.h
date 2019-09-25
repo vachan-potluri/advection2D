@@ -28,10 +28,13 @@
 #include <deal.II/lac/solver_richardson.h>
 #include <deal.II/lac/precondition_block.h>
 
+#include <deal.II/numerics/vector_tools.h>
+
 // #include <deal.II/numerics/derivative_approximation.h> // for adaptive mesh
 
 #include "common.h"
 #include "wind.h"
+#include "IC.h"
 
 #ifndef advection2D_h
 #define advection2D_h

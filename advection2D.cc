@@ -135,16 +135,12 @@ void advection2D::assemble_system()
 /**
  * @brief Sets initial condition
  * 
- * Since nodal basis is being used, initial condition is easy to set
+ * Since nodal basis is being used, initial condition is easy to set. interpolate function of
+ * VectorTools namespace is used.
  */
 void advection2D::set_IC()
 {
-        std::vector<uint> cur_global_dofs;
-        cur_global_dofs.reserve(fe.dofs_per_cell);
-        for(auto &cell: dof_handler.active_cell_iterators()){
-                cell->get_dof_indices(cur_global_dofs);
-                
-        }
+        VectorTools::interpolate(dof_handler, IC(), g_solution);
 }
 
 /**
