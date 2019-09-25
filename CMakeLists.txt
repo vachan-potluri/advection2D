@@ -18,6 +18,7 @@ SET(TARGET "advection2D")
 SET(TARGET_SRC
   num_fluxes.cc
   wind.cc
+  IC.cc
   advection2D.cc
   main.cc
 )
