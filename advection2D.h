@@ -74,11 +74,14 @@ class advection2D
         private:
         void setup_system();
         void assemble_system();
+        void print_matrices();
 
         // class variables
         Triangulation<2> triang;
         const MappingQ1<2> mapping;
 
+        // By default, fe assumes all dofs to be inside cell. Thus, fe.dofs_per_face will return 0.
+        // The variable fe_face can be thought as projection of a DG basis on a face
         FE_DGQ<2> fe;
         FE_FaceQ<2> fe_face; // face finite element
         DoFHandler<2> dof_handler;
