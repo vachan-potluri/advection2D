@@ -31,7 +31,8 @@ advection2D::advection2D(const uint order)
  * 1. Mesh is setup and stored in advection2D::triang
  * 2. advection2D::dof_handler is linked to advection2D::fe
  * 3. advection2D::g_solution and advection2D::l_rhs sizes are set
- * 4. Sizes of advection2D::stiff_mats and advection2D::lift_mats containers are set
+ * 4. Sizes of advection2D::stiff_mats, advection2D::lift_mats and advection2D::l_rhs containers are
+ * set
  */
 void advection2D::setup_system()
 {
@@ -46,7 +47,6 @@ void advection2D::setup_system()
         // no system_matrix because the solution is updated cell wise
         g_solution.reinit(dof_handler.n_dofs());
         gold_solution.reinit(dof_handler.n_dofs());
-        l_rhs.reinit(fe.dofs_per_cell);
 
         // set user flags for cell
         // for a face, cell with lower user index will be treated owner
@@ -59,6 +59,9 @@ void advection2D::setup_system()
         // set sizes of stiffness and lifting matrix containers
         stiff_mats.reserve(triang.n_active_cells());
         lift_mats.reserve(triang.n_active_cells());
+
+        l_rhs.reserve(triang.n_active_cells());
+        for(auto &cur_rhs: l_rhs) cur_rhs.reinit(fe.dofs_per_cell);
 }
 
 /**
@@ -87,6 +90,7 @@ void advection2D::assemble_system()
         uint i, j, i_face, j_face, qid, face_id;
         // compute mass and diff matrices
         for(auto &cell: dof_handler.active_cell_iterators()){
+                deallog << "Assembling cell " << cell->index() << std::endl;
                 fe_values.reinit(cell);
                 l_mass = 0;
                 l_diff = 0;
@@ -105,7 +109,7 @@ void advection2D::assemble_system()
                 } // loop over cell quad points
                 l_mass_inv.invert(l_mass);
                 l_mass_inv.mmult(temp, l_diff); // store mass_inv * diff into temp
-                stiff_mats.emplace_back(temp);
+                stiff_mats[cell->index()] = temp;
 
                 // each face will have a separate flux matrix
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
@@ -151,6 +155,7 @@ void advection2D::set_IC()
  * @f$y=0@f$ forms boundary 1 with @f$\phi@f$ value prescribed as @f$0@f$<br/>
  * @f$x=1 \bigcup y=1@f$ forms boundary 2 with zero gradient
  * @note Ghost cell approach will be used
+ * @todo Check this function
  */
 void advection2D::set_boundary_ids()
 {
