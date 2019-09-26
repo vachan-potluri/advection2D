@@ -23,6 +23,7 @@ Tensor<1,2> exact_flux(const double s_value, const Point<2> &loc)
  * See https://www.cfd-online.com/Forums/blogs/praveen/315-flux-computation-unstructured-grids.html
  * and normal_numerical_flux function of step-33
  * @note The flux vector dotted with normal vector is returned. This is what is required for assembly
+ * @warning The @p normal must be a unit vector and must point from owner to neighbor
  */
 double rusanov_flux(const double o_state, const double n_state, 
                          const Point<2> &loc, const Tensor<1,2> &normal)
