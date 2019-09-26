@@ -38,6 +38,7 @@
 #include "common.h"
 #include "wind.h"
 #include "IC.h"
+#include "num_fluxes.h"
 
 #ifndef advection2D_h
 #define advection2D_h
@@ -88,6 +89,7 @@ class advection2D
         void assemble_system();
         void set_IC();
         void set_boundary_ids();
+        void update(const double time_step);
         void print_matrices() const;
         void output(const std::string &filename) const;
 

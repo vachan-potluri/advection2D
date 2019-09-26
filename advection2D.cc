@@ -6,7 +6,7 @@
 #include "advection2D.h"
 
 /**
- * @brief Constructor with order of polynomial approx as arg
+ * @brief Constructor with @p order of polynomial approx as arg
  * 
  * advection2D::mapping, advection2D::fe and advection2D::fe_face are initialised.
  * advection2D::dof_handler is associated to advection2D::triang.
@@ -169,6 +169,58 @@ void advection2D::set_boundary_ids()
                         }
                 } // loop over faces
         } // loop over cells
+}
+
+/**
+ * @brief Updates solution with the given @p time_step
+ * 
+ * Algorithm:
+ * - For every cell:
+ *   - For every face:
+ *     - Get neighbor id
+ *     - if neighbor id > cell id, continue
+ *     - else:
+ *       - Get face id wrt owner and neighbor (using neighbor_of_neighbor)
+ *       - Get global dofs on owner and neighbor
+ *       - Using face ids and global dofs of owner and neighbor, get global dofs on this face on
+ * owner and neighbor side
+ *       - Compute the numerical flux
+ *       - Use lifting matrices to update owner and neighbor rhs
+ * 
+ * <code>cell->get_dof_indices()</code> will return the dof indices in the order shown in
+ * https://www.dealii.org/current/doxygen/deal.II/classFE__DGQ.html. This fact is mentioned in
+ * https://www.dealii.org/current/doxygen/deal.II/classDoFCellAccessor.html
+ * 
+ * @pre @p time_step must be a stable one, any checks on this value are not done
+ */
+void advection2D::update(const double time_step)
+{
+        uint face_id, face_id_neighbor, i;
+        std::vector<uint> dof_ids(fe.dofs_per_cell), dof_ids_neighbor(fe.dofs_per_cell);
+        double phi, phi_neighbor; // owner and neighbor side values of phi
+        Vector<double> normal_flux(fe_face.dofs_per_face); // the normal num flux vector for a face
+        Point<2> dof_loc;
+        Tensor<1,2> normal;
+
+        for(auto &cell: dof_handler.active_cell_iterators()){
+                for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
+                        if(cell->neighbor(face_id)->index() > cell->index()) continue;
+                        else{
+                                // get normal
+                                face_id_neighbor = cell->neighbor_of_neighbor(face_id);
+                                cell->get_dof_indices(dof_ids);
+                                cell->neighbor(face_id)->get_dof_indices(dof_ids_neighbor);
+                                for(i=0; i<fe_face.dofs_per_face; i++){
+                                        phi = gold_solution[
+                                                face_first_dof[face_id] +
+                                                i*face_dof_increment[face_id]];
+                                        phi_neighbor = gold_solution[
+                                                face_first_dof[face_id_neighbor] +
+                                                i*face_dof_increment[face_id_neighbor]];
+                                } // loop over face dofs
+                        } // loop over faces
+                } // loop over cells
+        }
 }
 
 /**
