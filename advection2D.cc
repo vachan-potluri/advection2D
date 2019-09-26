@@ -192,6 +192,9 @@ void advection2D::set_boundary_ids()
  * https://www.dealii.org/current/doxygen/deal.II/classDoFCellAccessor.html
  * 
  * @pre @p time_step must be a stable one, any checks on this value are not done
+ * @todo This function is wrong and incomplete. If Gaussian quadrature is used for evaluating flux
+ * matrix, then the normal numerical fluxes must also be obtained at these Gaussian quadrature
+ * points, which means the owner and neighbor side values must be obtained through interpolation
  */
 void advection2D::update(const double time_step)
 {
@@ -203,22 +206,26 @@ void advection2D::update(const double time_step)
         Tensor<1,2> normal;
 
         for(auto &cell: dof_handler.active_cell_iterators()){
+                cell->get_dof_indices(dof_ids);
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
                         if(cell->neighbor(face_id)->index() > cell->index()) continue;
                         else{
                                 // get normal
                                 face_id_neighbor = cell->neighbor_of_neighbor(face_id);
-                                cell->get_dof_indices(dof_ids);
                                 cell->neighbor(face_id)->get_dof_indices(dof_ids_neighbor);
                                 for(i=0; i<fe_face.dofs_per_face; i++){
+                                        // get location
+                                        // owner and neighbor side dof locations will match
                                         phi = gold_solution[
-                                                face_first_dof[face_id] +
-                                                i*face_dof_increment[face_id]];
+                                                dof_ids[ face_first_dof[face_id] +
+                                                i*face_dof_increment[face_id] ]
+                                                ];
                                         phi_neighbor = gold_solution[
-                                                face_first_dof[face_id_neighbor] +
-                                                i*face_dof_increment[face_id_neighbor]];
+                                                dof_ids_neighbor[ face_first_dof[face_id_neighbor] +
+                                                i*face_dof_increment[face_id_neighbor] ]
+                                                ];
                                 } // loop over face dofs
-                        } // loop over faces
+                        } // loop over faces (or neighbors)
                 } // loop over cells
         }
 }
