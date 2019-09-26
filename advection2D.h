@@ -105,7 +105,7 @@ class advection2D
         // output results
         Vector<double> g_solution; // global solution
         Vector<double> gold_solution; // global old solution
-        Vector<double> l_rhs; // local rhs (to be updated for every cell)
+        std::vector<Vector<double>> l_rhs; // local rhs of every cell
 
         // stiffness and lifting matrices
         std::vector<FullMatrix<double>> stiff_mats;
