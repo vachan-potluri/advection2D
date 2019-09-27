@@ -201,6 +201,7 @@ void advection2D::set_boundary_ids()
  * 
  * @pre @p time_step must be a stable one, any checks on this value are not done
  * @todo Some code repitition exists in the loop over faces
+ * @todo This is not working correctly. Carefully check cell and face loops
  */
 void advection2D::update(const double time_step)
 {
