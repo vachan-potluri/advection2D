@@ -204,12 +204,15 @@ void advection2D::set_boundary_ids()
  */
 void advection2D::update(const double time_step)
 {
+        // update old solution
+        uint i;
+        for(i=0; i<dof_handler.n_dofs(); i++) gold_solution(i) = g_solution(i);
+
         // set rhs to zero
         for(auto &cur_rhs: l_rhs) cur_rhs=0;
 
         uint face_id, face_id_neighbor; // id of face wrt owner and neighbor
         uint l_dof_id, l_dof_id_neighbor; // dof id (on a face) dof wrt owner and neighbor
-        uint i;
         // global dof ids of owner and neighbor
         std::vector<uint> dof_ids(fe.dofs_per_cell), dof_ids_neighbor(fe.dofs_per_cell);
         double phi, phi_neighbor; // owner and neighbor side values of phi
@@ -297,7 +300,23 @@ void advection2D::update(const double time_step)
                                 );
                         }
                 } // loop over faces
-        } // loop over cells
+                // compute stiffness term
+                Vector<double> lold_solution(fe.dofs_per_cell); // old phi values of cell
+                for(i=0; i<fe.dofs_per_cell; i++) lold_solution[i] = gold_solution[dof_ids[i]];
+                stiff_mats[cell->index()].vmult_add(
+                        l_rhs[cell->index()],
+                        lold_solution
+                );
+        } // loop over cells (for assembling rhs)
+
+        // Now, update
+        for(auto &cell: dof_handler.active_cell_iterators()){
+                cell->get_dof_indices(dof_ids);
+                for(i=0; i<fe.dofs_per_cell; i++){
+                        g_solution[dof_ids[i]] = gold_solution[dof_ids[i]] +
+                                l_rhs[cell->index()][i] * time_step;
+                }
+        }
 }
 
 /**
