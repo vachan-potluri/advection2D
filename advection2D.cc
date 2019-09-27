@@ -232,7 +232,9 @@ void advection2D::update(const double time_step)
                                         phi = gold_solution[
                                                 dof_ids[ l_dof_id ]
                                                 ];
-                                        phi_neighbor = phi; // use array of function pointers to set BC
+                                        // use array of functions (or func ptrs) to set BC
+                                        phi_neighbor =
+                                                bc_fns[cell->face(face_id)->boundary_id()](phi);
 
                                         normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
@@ -315,6 +317,7 @@ void advection2D::test()
         problem.print_matrices();
         problem.set_IC();
         problem.set_boundary_ids();
+        problem.update(0.0);
         problem.output(std::string("initial_condition.vtk"));
 }
 #endif
