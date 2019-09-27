@@ -7,6 +7,9 @@
  * definitions. All functions take owner value as parameter
  */
 
+#ifndef BCs_h
+#define BCs_h
+
 #include <functional> // alternate to function pointers
 #include <array>
 
@@ -15,3 +18,5 @@ double b1(const double o_value);
 double b2(const double o_value);
 
 std::array< std::function<double(const double)>, 3 > bc_fns = {b0,b1,b2};
+
+#endif
