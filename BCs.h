@@ -1,12 +1,17 @@
 /**
  * @file BCs.h
- * @brief Declarations for BCs and definition of the BC fn ptr array
+ * @brief Declarations for BCs and definition of the BC fn (ptr) array
  * 
  * The boundary functions for each of the boundaries are written and combined into an array of
- * function pointers. See advection2D::set_boundary_ids() for the boundary definitions. All
- * functions take owner value as parameter
+ * functions (or function pointers). See advection2D::set_boundary_ids() for the boundary
+ * definitions. All functions take owner value as parameter
  */
+
+#include <functional> // alternate to function pointers
+#include <array>
 
 double b0(const double o_value);
 double b1(const double o_value);
 double b2(const double o_value);
+
+std::array< std::function<double(const double)>, 3 > bc_fns = {b0,b1,b2};
