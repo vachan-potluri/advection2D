@@ -102,6 +102,7 @@ class advection2D
         FE_DGQ<2> fe;
         FE_FaceQ<2> fe_face; // face finite element
         DoFHandler<2> dof_handler;
+        std::vector<Point<2>> dof_locations; // all dof locations
 
         // solution has to be global to enable results output, a local solution cannot used to
         // output results

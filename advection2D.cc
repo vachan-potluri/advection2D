@@ -43,6 +43,8 @@ void advection2D::setup_system()
 
         // set dof_handler
         dof_handler.distribute_dofs(fe);
+        dof_locations.resize(dof_handler.n_dofs());
+        DoFTools::map_dofs_to_support_points(MappingQ1<2>(), dof_handler, dof_locations);
 
         // no system_matrix because the solution is updated cell wise
         g_solution.reinit(dof_handler.n_dofs());
@@ -57,8 +59,8 @@ void advection2D::setup_system()
         // } // loop over cells
 
         // set sizes of stiffness and lifting matrix containers
-        stiff_mats.reserve(triang.n_active_cells());
-        lift_mats.reserve(triang.n_active_cells());
+        stiff_mats.resize(triang.n_active_cells());
+        lift_mats.resize(triang.n_active_cells());
 
         l_rhs.reserve(triang.n_active_cells());
         for(auto &cur_rhs: l_rhs) cur_rhs.reinit(fe.dofs_per_cell);
