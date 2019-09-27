@@ -32,12 +32,14 @@
 #include <deal.II/numerics/data_out.h>
 
 #include <fstream>
+#include <functional>
 
 // #include <deal.II/numerics/derivative_approximation.h> // for adaptive mesh
 
 #include "common.h"
 #include "wind.h"
 #include "IC.h"
+#include "BCs.h"
 #include "num_fluxes.h"
 
 #ifndef advection2D_h
@@ -83,6 +85,7 @@ class advection2D
         const std::array<uint, GeometryInfo<2>::faces_per_cell> face_first_dof;
         // increment of cell dof on a face
         const std::array<uint, GeometryInfo<2>::faces_per_cell> face_dof_increment;
+        std::array< std::function<double(const double)>, 3 > bc_fns = {b0,b1,b2};
 
         private:
         void setup_system();

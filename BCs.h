@@ -17,6 +17,4 @@ double b0(const double o_value);
 double b1(const double o_value);
 double b2(const double o_value);
 
-std::array< std::function<double(const double)>, 3 > bc_fns = {b0,b1,b2};
-
 #endif
