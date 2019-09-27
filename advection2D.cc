@@ -191,41 +191,79 @@ void advection2D::set_boundary_ids()
  * 
  * <code>cell->get_dof_indices()</code> will return the dof indices in the order shown in
  * https://www.dealii.org/current/doxygen/deal.II/classFE__DGQ.html. This fact is mentioned in
- * https://www.dealii.org/current/doxygen/deal.II/classDoFCellAccessor.html
+ * https://www.dealii.org/current/doxygen/deal.II/classDoFCellAccessor.html.
+ * To get the dof location, advection2D::dof_locations has been obtained using
+ * <code>DoFTools::map_dofs_to_support_points()</code>. To get normal vectors, an FEFaceValues
+ * object is created with Gauss-Lobatto quadrature of order <code>fe.degree+1</code>.
  * 
  * @pre @p time_step must be a stable one, any checks on this value are not done
- * @todo This function is wrong and incomplete. If Gaussian quadrature is used for evaluating flux
- * matrix, then the normal numerical fluxes must also be obtained at these Gaussian quadrature
- * points, which means the owner and neighbor side values must be obtained through interpolation
+ * @todo Some code repitition exists in the loop over faces
+ * @todo Use an array of function pointers to set BC
  */
 void advection2D::update(const double time_step)
 {
-        uint face_id, face_id_neighbor, i;
+        uint face_id, face_id_neighbor; // id of face wrt owner and neighbor
+        uint l_dof_id, l_dof_id_neighbor; // dof id (on a face) dof wrt owner and neighbor
+        uint i;
+        // global dof ids of owner and neighbor
         std::vector<uint> dof_ids(fe.dofs_per_cell), dof_ids_neighbor(fe.dofs_per_cell);
         double phi, phi_neighbor; // owner and neighbor side values of phi
         Vector<double> normal_flux(fe_face.dofs_per_face); // the normal num flux vector for a face
-        Point<2> dof_loc;
-        Tensor<1,2> normal;
+        Point<2> dof_loc; // dof coordinates (on a face)
+        Tensor<1,2> normal; // face normal from away from owner at current dof
+        FEFaceValues<2> fe_face_values(fe, QGaussLobatto<1>(fe.degree+1), update_normal_vectors);
 
         for(auto &cell: dof_handler.active_cell_iterators()){
                 cell->get_dof_indices(dof_ids);
                 for(face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
-                        if(cell->neighbor(face_id)->index() > cell->index()) continue;
+                        if(cell->face(face_id)->at_boundary()){
+                                // this face is part of boundary, set phi_neighbor appropriately
+                                fe_face_values.reinit(cell, face_id);
+                                for(i=0; i<fe_face.dofs_per_face; i++){
+                                        l_dof_id = face_first_dof[face_id] +
+                                                i*face_dof_increment[face_id];;
+                                        
+                                        normal = fe_face_values.normal_vector(i);
+                                        // owner and neighbor side dof locations will match
+                                        dof_loc = dof_locations[
+                                                dof_ids[ l_dof_id ]
+                                                ];
+
+                                        phi = gold_solution[
+                                                dof_ids[ l_dof_id ]
+                                                ];
+                                        phi_neighbor = phi; // use array of function pointers to set BC
+
+                                        normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
+                                                normal);
+                                } // loop over face dofs
+                        }
+                        else if(cell->neighbor(face_id)->index() > cell->index()) continue;
                         else{
-                                // get normal
+                                fe_face_values.reinit(cell, face_id);
                                 face_id_neighbor = cell->neighbor_of_neighbor(face_id);
                                 cell->neighbor(face_id)->get_dof_indices(dof_ids_neighbor);
                                 for(i=0; i<fe_face.dofs_per_face; i++){
-                                        // get location
+                                        l_dof_id = face_first_dof[face_id] +
+                                                i*face_dof_increment[face_id];
+                                        l_dof_id_neighbor = face_first_dof[face_id_neighbor] +
+                                                i*face_dof_increment[face_id_neighbor];
+                                        
+                                        normal = fe_face_values.normal_vector(i);
                                         // owner and neighbor side dof locations will match
+                                        dof_loc = dof_locations[
+                                                dof_ids[ l_dof_id ]
+                                                ];
+
                                         phi = gold_solution[
-                                                dof_ids[ face_first_dof[face_id] +
-                                                i*face_dof_increment[face_id] ]
+                                                dof_ids[ l_dof_id ]
                                                 ];
                                         phi_neighbor = gold_solution[
-                                                dof_ids_neighbor[ face_first_dof[face_id_neighbor] +
-                                                i*face_dof_increment[face_id_neighbor] ]
+                                                dof_ids_neighbor[ l_dof_id_neighbor ]
                                                 ];
+
+                                        normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
+                                                normal);
                                 } // loop over face dofs
                         } // loop over faces (or neighbors)
                 } // loop over cells
