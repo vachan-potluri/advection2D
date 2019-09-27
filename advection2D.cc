@@ -198,7 +198,9 @@ void advection2D::set_boundary_ids()
  * 
  * @pre @p time_step must be a stable one, any checks on this value are not done
  * @todo Some code repitition exists in the loop over faces
- * @todo Use an array of function pointers to set BC
+ * @todo Currently, full flux matrices are being used. This is not required and not desired too.
+ * The normal_flux vector is of size dofs_per_face. So the flux matrices should just be 1D mass
+ * matrix with appropriate scaling
  */
 void advection2D::update(const double time_step)
 {
