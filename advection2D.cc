@@ -364,7 +364,17 @@ void advection2D::test()
         problem.print_matrices();
         problem.set_IC();
         problem.set_boundary_ids();
-        problem.update(0.0);
-        problem.output(std::string("initial_condition.vtk"));
+
+        double start_time = 0.0, end_time = 1.0, time_step = 0.01;
+        double cur_time = start_time;
+        uint time_counter=0;
+        std::string base_filename = "output.vtk";
+        problem.output(base_filename + ".0"); // initial condition
+        for(; cur_time<end_time; cur_time+=time_step){
+                deallog << "Step " << time_counter << " time " << time_step << std::endl;
+                problem.update(time_step);
+                time_counter++;
+                problem.output(base_filename + "." + std::to_string(time_counter));
+        }
 }
 #endif
