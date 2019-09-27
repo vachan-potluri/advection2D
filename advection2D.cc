@@ -196,11 +196,11 @@ void advection2D::set_boundary_ids()
  * <code>DoFTools::map_dofs_to_support_points()</code>. To get normal vectors, an FEFaceValues
  * object is created with Gauss-Lobatto quadrature of order <code>fe.degree+1</code>.
  * 
+ * The face normal flux vector must be mapped to owner- and neighbor- local dofs for multplication
+ * with lifting matrices. The mapped vectors will be of size <code>dof_per_cell</code>.
+ * 
  * @pre @p time_step must be a stable one, any checks on this value are not done
  * @todo Some code repitition exists in the loop over faces
- * @todo Currently, full flux matrices are being used. This is not required and not desired too.
- * The normal_flux vector is of size dofs_per_face. So the flux matrices should just be 1D mass
- * matrix with appropriate scaling
  */
 void advection2D::update(const double time_step)
 {
@@ -213,7 +213,9 @@ void advection2D::update(const double time_step)
         // global dof ids of owner and neighbor
         std::vector<uint> dof_ids(fe.dofs_per_cell), dof_ids_neighbor(fe.dofs_per_cell);
         double phi, phi_neighbor; // owner and neighbor side values of phi
-        Vector<double> normal_flux(fe_face.dofs_per_face); // the normal num flux vector for a face
+        double cur_normal_flux; // normal flux at current dof
+        // the -ve of normal num flux vector of face wrt owner and neighbor
+        Vector<double> neg_normal_flux(fe.dofs_per_cell), neg_normal_flux_neighbor(fe.dofs_per_cell);
         Point<2> dof_loc; // dof coordinates (on a face)
         Tensor<1,2> normal; // face normal from away from owner at current dof
         FEFaceValues<2> fe_face_values(fe, QGaussLobatto<1>(fe.degree+1), update_normal_vectors);
@@ -241,14 +243,15 @@ void advection2D::update(const double time_step)
                                         phi_neighbor =
                                                 bc_fns[cell->face(face_id)->boundary_id()](phi);
 
-                                        normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
+                                        cur_normal_flux = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
+                                        neg_normal_flux(l_dof_id) = -cur_normal_flux;
                                 } // loop over face dofs
+
                                 // multiply normal flux with lift matrx and store in rhs
-                                normal_flux *= -1.0;
                                 lift_mats[cell->index()][face_id].vmult_add(
                                         l_rhs[cell->index()],
-                                        normal_flux
+                                        neg_normal_flux
                                 );
                         }
                         else if(cell->neighbor_index(face_id) > cell->index()) continue;
@@ -276,20 +279,21 @@ void advection2D::update(const double time_step)
                                                 dof_ids_neighbor[ l_dof_id_neighbor ]
                                                 ];
 
-                                        normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
+                                        cur_normal_flux = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
+                                        neg_normal_flux(l_dof_id) = -cur_normal_flux;
+                                        neg_normal_flux_neighbor(l_dof_id_neighbor) = cur_normal_flux;
                                 } // loop over face dofs
 
                                 // multiply normal flux with lift matrx and store in rhs
                                 // for both owner and neighbor
                                 lift_mats[cell->neighbor_index(face_id)][face_id_neighbor].vmult_add(
                                         l_rhs[cell->neighbor_index(face_id)],
-                                        normal_flux
+                                        neg_normal_flux
                                 );
-                                normal_flux *= -1.0;
                                 lift_mats[cell->index()][face_id].vmult_add(
                                         l_rhs[cell->index()],
-                                        normal_flux
+                                        neg_normal_flux_neighbor
                                 );
                         }
                 } // loop over faces
