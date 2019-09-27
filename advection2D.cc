@@ -62,7 +62,7 @@ void advection2D::setup_system()
         stiff_mats.resize(triang.n_active_cells());
         lift_mats.resize(triang.n_active_cells());
 
-        l_rhs.reserve(triang.n_active_cells());
+        l_rhs.resize(triang.n_active_cells());
         for(auto &cur_rhs: l_rhs) cur_rhs.reinit(fe.dofs_per_cell);
 }
 
@@ -202,6 +202,9 @@ void advection2D::set_boundary_ids()
  */
 void advection2D::update(const double time_step)
 {
+        // set rhs to zero
+        for(auto &cur_rhs: l_rhs) cur_rhs=0;
+
         uint face_id, face_id_neighbor; // id of face wrt owner and neighbor
         uint l_dof_id, l_dof_id_neighbor; // dof id (on a face) dof wrt owner and neighbor
         uint i;
@@ -239,9 +242,16 @@ void advection2D::update(const double time_step)
                                         normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
                                 } // loop over face dofs
+                                // multiply normal flux with lift matrx and store in rhs
+                                normal_flux *= -1.0;
+                                lift_mats[cell->index()][face_id].vmult_add(
+                                        l_rhs[cell->index()],
+                                        normal_flux
+                                );
                         }
-                        else if(cell->neighbor(face_id)->index() > cell->index()) continue;
+                        else if(cell->neighbor_index(face_id) > cell->index()) continue;
                         else{
+                                // internal face
                                 fe_face_values.reinit(cell, face_id);
                                 face_id_neighbor = cell->neighbor_of_neighbor(face_id);
                                 cell->neighbor(face_id)->get_dof_indices(dof_ids_neighbor);
@@ -267,9 +277,21 @@ void advection2D::update(const double time_step)
                                         normal_flux(i) = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
                                 } // loop over face dofs
-                        } // loop over faces (or neighbors)
-                } // loop over cells
-        }
+
+                                // multiply normal flux with lift matrx and store in rhs
+                                // for both owner and neighbor
+                                lift_mats[cell->neighbor_index(face_id)][face_id_neighbor].vmult_add(
+                                        l_rhs[cell->neighbor_index(face_id)],
+                                        normal_flux
+                                );
+                                normal_flux *= -1.0;
+                                lift_mats[cell->index()][face_id].vmult_add(
+                                        l_rhs[cell->index()],
+                                        normal_flux
+                                );
+                        }
+                } // loop over faces
+        } // loop over cells
 }
 
 /**
