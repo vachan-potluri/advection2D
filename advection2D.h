@@ -74,6 +74,8 @@
  * different faces cannot be clubbed into a single lifting matrix because two numerical fluxes act
  * at every cell vertex. Accordingly, 4 different numerical flux vectors will multiply these 4
  * lifting matrices. See ME757 material "Notes14.pdf"
+ * 
+ * @todo The update is not correct. Check the signs of flux matrices
  */
 
 class advection2D
