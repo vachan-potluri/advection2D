@@ -165,9 +165,12 @@ void advection2D::set_boundary_ids()
                 for(uint face_id=0; face_id<GeometryInfo<2>::faces_per_cell; face_id++){
                         if(cell->face(face_id)->at_boundary()){
                                 Point<2> fcenter = cell->face(face_id)->center(); // face center
-                                if(fabs(fcenter(0)) < 1e-6) cell->face(face_id)->set_boundary_id(0);
-                                if(fabs(fcenter(1)) < 1e-6) cell->face(face_id)->set_boundary_id(1);
-                                else cell->face(face_id)->set_boundary_id(2);
+                                if(fabs(fcenter(0)) < 1e-6)
+                                        cell->face(face_id)->set_boundary_id(0);
+                                else if(fabs(fcenter(1)) < 1e-6)
+                                        cell->face(face_id)->set_boundary_id(1);
+                                else
+                                        cell->face(face_id)->set_boundary_id(2);
                         }
                 } // loop over faces
         } // loop over cells
@@ -238,11 +241,11 @@ void advection2D::update(const double time_step)
                                         // owner and neighbor side dof locations will match
                                         dof_loc = dof_locations[
                                                 dof_ids[ l_dof_id ]
-                                                ];
+                                        ];
 
                                         phi = gold_solution[
                                                 dof_ids[ l_dof_id ]
-                                                ];
+                                        ];
                                         // use array of functions (or func ptrs) to set BC
                                         phi_neighbor =
                                                 bc_fns[cell->face(face_id)->boundary_id()](phi);
@@ -274,14 +277,14 @@ void advection2D::update(const double time_step)
                                         // owner and neighbor side dof locations will match
                                         dof_loc = dof_locations[
                                                 dof_ids[ l_dof_id ]
-                                                ];
+                                        ];
 
                                         phi = gold_solution[
                                                 dof_ids[ l_dof_id ]
-                                                ];
+                                        ];
                                         phi_neighbor = gold_solution[
                                                 dof_ids_neighbor[ l_dof_id_neighbor ]
-                                                ];
+                                        ];
 
                                         cur_normal_flux = rusanov_flux(phi, phi_neighbor, dof_loc,
                                                 normal);
@@ -366,12 +369,11 @@ void advection2D::test()
         problem.set_IC();
         problem.set_boundary_ids();
 
-        double start_time = 0.0, end_time = 1.0, time_step = 0.01;
-        double cur_time = start_time;
-        uint time_counter=0;
+        double start_time = 0.0, end_time = 0.1, time_step = 0.01;
+        uint time_counter = 0;
         std::string base_filename = "output.vtk";
         problem.output(base_filename + ".0"); // initial condition
-        for(; cur_time<end_time; cur_time+=time_step){
+        for(double cur_time = start_time; cur_time<end_time; cur_time+=time_step){
                 deallog << "Step " << time_counter << " time " << time_step << std::endl;
                 problem.update(time_step);
                 time_counter++;
