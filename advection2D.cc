@@ -72,6 +72,9 @@ void advection2D::setup_system()
  * Calculating mass and differentiation matrices is as usual. Each face will have its own flux
  * matrix. The containers advection2D::face_first_dof and advection2D::face_dof_increment are used
  * to map face-local dof index to cell dof index.
+ * 
+ * Since the face integral on a cell boundary must be in ccw direction, the flux matrices of faces
+ * 0 and 3 must be inverted in sign after computation because they point in the other direction.
  */
 void advection2D::assemble_system()
 {
@@ -135,6 +138,9 @@ void advection2D::assemble_system()
                         l_mass_inv.mmult(temp, l_flux);
                         lift_mats[cell->index()][face_id] = temp;
                 }// loop over faces
+                // Lifting matrices for faces 0 and 3 must be muliplied by -1
+                lift_mats[cell->index()][0] *= -1.0;
+                lift_mats[cell->index()][3] *= -1.0;
         }// loop over cells
         deallog << "Completed assembly" << std::endl;
 }
