@@ -28,7 +28,7 @@ Tensor<1,2> exact_flux(const double s_value, const Point<2> &loc)
 double rusanov_flux(const double o_state, const double n_state, 
                          const Point<2> &loc, const Tensor<1,2> &normal)
 {
-        const double num_visc = 0.5; // artificial or numerical viscosity
-        return 0.5*( exact_flux(o_state, loc) + exact_flux(n_state, loc) ) * normal +
+        const double num_visc = wind(loc)*normal; // artificial or numerical viscosity
+        return 0.5*( exact_flux(o_state, loc) + exact_flux(n_state, loc) ) * normal -
                0.5*num_visc*(o_state - n_state);
 }
