@@ -232,7 +232,7 @@ void advection2D::update(const double time_step)
                                 fe_face_values.reinit(cell, face_id);
                                 for(i=0; i<fe_face.dofs_per_face; i++){
                                         l_dof_id = face_first_dof[face_id] +
-                                                i*face_dof_increment[face_id];;
+                                                i*face_dof_increment[face_id];
                                         
                                         normal = fe_face_values.normal_vector(i);
                                         // owner and neighbor side dof locations will match
@@ -293,11 +293,11 @@ void advection2D::update(const double time_step)
                                 // for both owner and neighbor
                                 lift_mats[cell->neighbor_index(face_id)][face_id_neighbor].vmult_add(
                                         l_rhs[cell->neighbor_index(face_id)],
-                                        neg_normal_flux
+                                        neg_normal_flux_neighbor
                                 );
                                 lift_mats[cell->index()][face_id].vmult_add(
                                         l_rhs[cell->index()],
-                                        neg_normal_flux_neighbor
+                                        neg_normal_flux
                                 );
                         }
                 } // loop over faces
