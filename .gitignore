@@ -9,4 +9,4 @@ cmake_install.cmake
 advection2D
 
 # result files
-*.vtk
+*.vtk*
