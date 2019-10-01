@@ -73,8 +73,8 @@ void advection2D::setup_system()
  * matrix. The containers advection2D::face_first_dof and advection2D::face_dof_increment are used
  * to map face-local dof index to cell dof index.
  * 
- * Since the face integral on a cell boundary must be in ccw direction, the flux matrices of faces
- * 0 and 3 must be inverted in sign after computation because they point in the other direction.
+ * @todo Check whether <code>FEFaceValues::reinit()</code> automatically takes care of direction of
+ * integration for faces 0 and 3 since they are oriented in cw direction.
  */
 void advection2D::assemble_system()
 {
@@ -138,9 +138,12 @@ void advection2D::assemble_system()
                         l_mass_inv.mmult(temp, l_flux);
                         lift_mats[cell->index()][face_id] = temp;
                 }// loop over faces
-                // Lifting matrices for faces 0 and 3 must be muliplied by -1
-                lift_mats[cell->index()][0] *= -1.0;
-                lift_mats[cell->index()][3] *= -1.0;
+
+                // Lifting matrices for faces 0 and 3 must be muliplied by -1 (?)
+                // not sure of this
+                // lift_mats[cell->index()][0] *= -1.0;
+                // lift_mats[cell->index()][3] *= -1.0;
+
         }// loop over cells
         deallog << "Completed assembly" << std::endl;
 }
@@ -375,12 +378,12 @@ void advection2D::test()
         problem.set_IC();
         problem.set_boundary_ids();
 
-        double start_time = 0.0, end_time = 0.1, time_step = 0.01;
+        double start_time = 0.0, end_time = 0.5, time_step = 0.005;
         uint time_counter = 0;
         std::string base_filename = "output.vtk";
         problem.output(base_filename + ".0"); // initial condition
         for(double cur_time = start_time; cur_time<end_time; cur_time+=time_step){
-                deallog << "Step " << time_counter << " time " << time_step << std::endl;
+                deallog << "Step " << time_counter << " time " << cur_time << std::endl;
                 problem.update(time_step);
                 time_counter++;
                 problem.output(base_filename + "." + std::to_string(time_counter));
