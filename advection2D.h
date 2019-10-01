@@ -75,7 +75,10 @@
  * at every cell vertex. Accordingly, 4 different numerical flux vectors will multiply these 4
  * lifting matrices. See ME757 material "Notes14.pdf"
  * 
- * @todo The update is not correct. Check the signs of flux matrices
+ * @remark The code is working fine, but the problem considered requires a limiter.
+ * 
+ * @todo Add function for calculating stable time step
+ * @todo Add limiter functionality
  */
 
 class advection2D
