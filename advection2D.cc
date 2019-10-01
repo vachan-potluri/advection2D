@@ -95,7 +95,7 @@ void advection2D::assemble_system()
         uint i, j, i_face, j_face, qid, face_id;
         // compute mass and diff matrices
         for(auto &cell: dof_handler.active_cell_iterators()){
-                deallog << "Assembling cell " << cell->index() << std::endl;
+                // deallog << "Assembling cell " << cell->index() << std::endl;
                 fe_values.reinit(cell);
                 l_mass = 0;
                 l_diff = 0;
@@ -219,7 +219,7 @@ void advection2D::update(const double time_step)
         for(i=0; i<dof_handler.n_dofs(); i++) gold_solution(i) = g_solution(i);
 
         // set rhs to zero
-        for(auto &cur_rhs: l_rhs) cur_rhs=0;
+        for(auto &cur_rhs: l_rhs) cur_rhs=0.0;
 
         uint face_id, face_id_neighbor; // id of face wrt owner and neighbor
         uint l_dof_id, l_dof_id_neighbor; // dof id (on a face) dof wrt owner and neighbor
