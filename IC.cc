@@ -7,5 +7,5 @@
 
 double IC::value(const Point<2> &p, const uint component) const
 {
-      return p.norm();  
+      return 0.0;  
 }

@@ -11,7 +11,7 @@ double b0(const double o_value)
 }
 double b1(const double o_value)
 {
-        return 0.0;
+        return 2.0;
 }
 double b2(const double o_value)
 {
