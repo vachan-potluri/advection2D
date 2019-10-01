@@ -30,7 +30,7 @@ Dy = dx/12*np.matrix(
 D = u*Dx + v*Dy
 print("Total differentiation matrix: \n{}".format(D))
 
-F0 = -dy/6*np.matrix(
+F0 = dy/6*np.matrix(
         np.array([[2,0,1,0],
                   [0,0,0,0],
                   [1,0,2,0],
@@ -42,7 +42,7 @@ F1 = dy/6*np.matrix(
                   [0,0,0,0],
                   [0,1,0,2]])
 )
-F2 = -dx/6*np.matrix(
+F2 = dx/6*np.matrix(
         np.array([[2,1,0,0],
                   [1,2,0,0],
                   [0,0,0,0],
